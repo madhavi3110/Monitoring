@@ -1,0 +1,27 @@
+---
+# tasks file for roles/Newrelic
+
+- name: Download Newrelic agent tar file
+  get_url:
+    url="http://download.newrelic.com/infrastructure_agent/binaries/linux/amd64/newrelic-infra_linux_{{ nrinfragent_version }}_amd64.tar.gz"
+    dest="/opt/newrelic-infra_linux_{{ nrinfragent_version }}_amd64.tar.gz"
+
+- name: untar Newrelic package
+  unarchive:
+    src: /opt/newrelic-infra_linux_{{ nrinfragent_version }}_amd64.tar.gz
+    dest: /opt
+    mode: 0777
+    remote_src: yes
+
+- name: Install Newrelic Agent
+  command: sh /opt/newrelic-infra/installer.sh
+  become: yes
+
+- name: Modify newrelic-infra.yml file
+  lineinfile:
+    path: /etc/newrelic-infra.yml
+    state: present
+    regexp: 'license_key:'
+    line: "license_key:{{nrinfragent_license_key}}"
+  become: yes
+  notify: restart newrelic-infra

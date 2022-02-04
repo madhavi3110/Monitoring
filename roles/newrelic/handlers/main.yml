@@ -1,0 +1,7 @@
+---
+# handlers file for roles/Newrelic
+
+- name: restart newrelic-infra
+  service:
+    name: newrelic-infra
+    state: restarted

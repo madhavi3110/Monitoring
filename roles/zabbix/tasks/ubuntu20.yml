@@ -1,0 +1,97 @@
+- set_fact:
+    flag: false
+
+- name: download zabbix deb file fot Ubuntu 20.04
+  get_url:
+    url: "https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_{{ zabbix_version }}-1+focal_all.deb"
+    dest: "/tmp/zabbix-release_{{ zabbix_version }}-1+focal_all.deb"
+  register: output
+
+- set_fact: flag="{{output.failed}}"
+
+- debug:
+    msg: "Download is failed"
+  when: flag
+
+- name: install zabbix deb for Ubuntu 20.04 Xenial
+  apt: deb="/tmp/zabbix-release_{{ zabbix_version }}-1+focal_all.deb"
+  register: output1
+  when: not flag
+
+- set_fact: flag="{{output1.failed}}"
+
+- debug:
+    msg: "Installation is failed"
+  when: flag
+
+- name: install zabbix-agent 4.4 Ubuntu
+  apt:
+    name: zabbix-agent
+    state: latest
+    update_cache: yes
+  register: output2
+  when: not flag
+
+- set_fact: flag="{{output2.failed}}"
+
+- debug:
+    msg: "Agent Installation is failed"
+  when: flag
+
+- name: enable service zabbix-agent
+  systemd:
+    name: zabbix-agent
+    enabled: yes
+    masked: no
+  become: yes
+
+- name: change zabbix_agentd.conf ServerActive
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    state: present
+    regexp: 'ServerActive=127.0.0.1'
+    line: "ServerActive={{zabbix_server}}"
+  become: yes
+  register: output3
+  when: not flag
+
+- set_fact: flag="{{output3.failed}}"
+
+- debug:
+    msg: "ServerActive is not updated"
+  when: flag
+
+- name: change zabbix_agentd.conf Hostname
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    state: present
+    regexp: 'Hostname=Zabbix server'
+    line: "Hostname={{ ansible_hostname }}"
+  become: yes
+  register: output4
+  when: not flag
+
+- set_fact: flag="{{output4.failed}}"
+
+- debug:
+    msg: "Hostname is not updated"
+  when: flag
+
+- name: change zabbix_agentd.conf Server
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    state: present
+    regexp: 'Server=127.0.0.1'
+    line: "Server={{zabbix_server}}"
+  become: yes
+  register: output5
+  when: not flag
+
+- set_fact: flag="{{output5.failed}}"
+
+- debug:
+    msg: "Server name is not updated"
+  when: flag
+
+- name: restart agent
+  command: sudo systemctl restart zabbix-agent

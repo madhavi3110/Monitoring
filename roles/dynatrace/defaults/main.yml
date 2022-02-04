@@ -1,0 +1,5 @@
+---
+# defaults file for roles/Dynatrace
+
+dynatrace_environment_url: "https://eak35266.live.dynatrace.com/api/v1/"
+dynatrace_paas_token: "dt0c01.TIF3OJQNOZ657BXPL77SMMH3.KWND4XNLQ3LEYFWL7NV46VTIIJWJ5OQV2AH67OYFARVXCXO7DQMEZ3MXUX5IHNY2"

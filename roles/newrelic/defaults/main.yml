@@ -1,0 +1,5 @@
+---
+# defaults file for roles/Newrelic
+
+nrinfragent_version: "1.10.35"
+nrinfragent_license_key: " 3bd4853fa47c154bd43ecb76c26acf868dedNRAL"

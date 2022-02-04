@@ -1,0 +1,7 @@
+- name: install Zabbix Agent
+  hosts: all
+  ignore_errors: yes
+  become: yes
+  roles:
+  - zabbix
+

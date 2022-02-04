@@ -1,0 +1,86 @@
+- set_fact:
+    flag: false
+
+- name: install zabbix centOS 7 rpm file
+  yum:
+    name: "http://repo.zabbix.com/zabbix/{{ zabbix_version_centOS }}/rhel/7/x86_64/zabbix-release-{{ zabbix_version_centOS }}-1.el7.noarch.rpm"
+  register: output
+
+- set_fact: flag="{{output.failed}}"
+
+- debug:
+    msg: "Installation is failed"
+  when: flag
+
+- name: install zabbix-agent for centOS 7
+  yum:
+    name: zabbix-agent
+    enablerepo: zabbix
+    update_cache: true
+    state: latest
+  register: output1
+  when: not flag
+
+- set_fact: flag="{{output1.failed}}"
+
+- debug:
+    msg: "Agent Installation is failed"
+  when: flag
+
+- name: enable service zabbix-agent
+  systemd:
+    name: zabbix-agent
+    enabled: yes
+    masked: no
+  become: yes
+
+- name: change zabbix_agentd.conf ServerActive
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    state: present
+    regexp: 'ServerActive=127.0.0.1'
+    line: "ServerActive={{zabbix_server}}"
+  become: yes
+  register: output3
+  when: not flag
+
+- set_fact: flag="{{output3.failed}}"
+
+- debug:
+    msg: "ServerActive is not updated"
+  when: flag
+
+- name: change zabbix_agentd.conf Hostname
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    state: present
+    regexp: 'Hostname=Zabbix server'
+    line: "Hostname={{ ansible_hostname }}"
+  become: yes
+  register: output4
+  when: not flag
+
+- set_fact: flag="{{output4.failed}}"
+
+- debug:
+    msg: "Hostname is not updated"
+  when: flag
+
+- name: change zabbix_agentd.conf Server
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    state: present
+    regexp: 'Server=127.0.0.1'
+    line: "Server={{zabbix_server}}"
+  become: yes
+  register: output5
+  when: not flag
+
+- set_fact: flag="{{output5.failed}}"
+
+- debug:
+    msg: "Server name is not updated"
+  when: flag
+
+- name: restart agent
+  command: sudo systemctl restart zabbix-agent

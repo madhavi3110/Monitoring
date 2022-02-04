@@ -1,0 +1,67 @@
+---
+# tasks file for roles/Dynatrace
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+  become: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Check if 'java' is on the PATH
+  shell: which java
+  register: which_java_cmd
+  become: yes
+
+- name: Install package 'default-jre-headless'
+  apt:
+    pkg: default-jre-headless
+  when: (which_java_cmd.rc != 0) and (ansible_distribution == 'Ubuntu')
+  become: yes
+
+- name: Install package 'java-1.7.0-openjdk'
+  yum:
+    pkg: java-1.7.0-openjdk
+  when: (which_java_cmd.rc != 0) and (ansible_os_family == 'RedHat')
+  become: yes
+
+- set_fact:
+    flag: false
+
+- name: Download One Agent
+  get_url:
+    url: "{{ dynatrace_environment_url }}deployment/installer/agent/unix/default/latest?Api-Token={{ dynatrace_paas_token }}&arch=x86&flavor=default"
+    dest: /opt/Dynatrace-OneAgent-Linux-latest.sh
+    mode: '0777'
+  register: output
+
+- set_fact: flag="{{output.failed}}"
+
+- debug:
+    msg: "Download is failed"
+  when: flag
+
+- name: Verify Signature
+  get_url:
+    url: "https://ca.dynatrace.com/dt-root.cert.pem" 
+    dest: "/opt"
+    mode: '0777'
+  register: output1
+  when: not flag
+
+- set_fact: flag="{{output1.failed}}"
+
+- debug:
+    msg: "Signature Download is failed"
+  when: flag
+
+- name: Install One Agent
+  shell: "sh /opt/Dynatrace-OneAgent-Linux-latest.sh"
+  become: yes
+  register: output2
+  when: not flag
+
+- set_fact: flag="{{output2.failed}}"
+
+- debug:
+    msg: Installation is failed"
+  when: flag

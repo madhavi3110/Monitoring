@@ -1,0 +1,6 @@
+---
+# defaults file for roles/zabbix
+
+zabbix_version: "5.0"
+zabbix_server: 172.31.35.84
+zabbix_version_centOS: "3.2"

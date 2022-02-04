@@ -1,0 +1,8 @@
+
+
+- name: install Newrelic oneAgent
+  hosts: all
+  ignore_errors: yes
+  become: yes
+  roles:
+  - Newrelic

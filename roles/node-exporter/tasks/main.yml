@@ -1,0 +1,83 @@
+# tasks file for roles/node-exporter
+
+  - name: Create a login user
+    user:
+      name: node_exporter
+      state: present
+      shell: /bin/false
+      system: yes
+      createhome: no
+
+  - set_fact:
+       flag: false
+
+  - name: download tar file
+    get_url:
+      url="https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+      dest="/opt/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"  
+    register: output
+    
+  - debug: var=output
+
+  - set_fact: flag="{{output.failed}}"
+
+  - debug:
+      msg: "Download is failed"
+    when: flag
+
+  - name: untar Exporter package
+    unarchive:
+      src: /opt/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz
+      dest: /opt
+      mode: 0777
+      remote_src: yes
+    register: output1
+    when: not flag
+
+  - debug: var=output1
+
+  - set_fact: flag="{{output1.failed}}"
+
+  - debug:
+      msg: "Untar is failed"
+    when: flag
+
+  - name: Copy files
+    copy: remote_src=True src=/opt/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter dest=/usr/local/bin mode='0777' owner=node_exporter group=node_exporter 
+    register: output2
+    when: not flag
+
+  - debug: var=output2
+
+  - set_fact: flag="{{output2.failed}}"
+
+  - debug:
+      msg: "Copy is failed"
+    when: flag    
+
+  - name: Install service
+    template:
+      src: node_exporter.service
+      dest: /etc/systemd/system
+      owner: root
+      group: root
+      mode: 0777
+    register: output3
+    when: not flag
+
+  - debug: var=output3
+
+  - set_fact: flag="{{output3.failed}}"
+
+  - debug:
+      msg: "Configuration is failed"
+    when: flag
+
+  - name: Reload the daemon system
+    command: sudo systemctl daemon-reload
+
+  - name: star the node exporter service.
+    command: sudo systemctl start node_exporter
+
+  - name: Enable the node exporter service
+    command: sudo systemctl enable node_exporter

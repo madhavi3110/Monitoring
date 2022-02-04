@@ -1,0 +1,14 @@
+
+
+
+- name: Install dynatrace oneagent in Ubuntu18.04
+  include_tasks: "tasks/ubuntu18.yml"
+  when: ansible_distribution_release == 'bionic'
+
+- name: install dynatrace oneagent in Ubuntu20.04
+  include_tasks: "tasks/ubuntu20.yml"
+  when: ansible_distribution_release == 'focal'
+
+- name: install dynatrace oneagent in centOS 7
+  include_tasks: "tasks/centOS.yml"
+  when: ansible_os_family == "RedHat"

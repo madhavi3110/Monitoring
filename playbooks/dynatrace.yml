@@ -1,0 +1,8 @@
+
+
+- name: install Dynatrace oneAgent
+  hosts: all
+  ignore_errors: yes
+  become: yes
+  roles:
+  - Dynatrace
